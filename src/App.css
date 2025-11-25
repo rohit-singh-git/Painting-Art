@@ -1,0 +1,11 @@
+.app {
+  text-align: center;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+}
+
+.title {
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: 600;
+}
