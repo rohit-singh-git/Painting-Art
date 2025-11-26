@@ -1,4 +1,5 @@
 import PaintingAnimator from "./components/PaintingAnimator";
+import "./App.css"
 
 export default function App() {
   return (

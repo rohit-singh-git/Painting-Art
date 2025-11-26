@@ -9,7 +9,8 @@ export default function PaintingAnimator() {
     const [isPaused, setIsPaused] = useState(false);
     const [progress, setProgress] = useState(0);
     const [phase, setPhase] = useState('');
-    const [speed, setSpeed] = useState(500);
+    const [speed, setSpeed] = useState(100);
+    const [loadError, setLoadError] = useState(false);
 
     const canvasRef = useRef(null);
     const colorCanvasRef = useRef(null);
@@ -17,7 +18,54 @@ export default function PaintingAnimator() {
     const pathDataRef = useRef(null);
     const currentIndexRef = useRef(0);
 
-    const MAX_SIZE = 1200;
+    // const MAX_SIZE = 1000;
+
+    // Use online images or replace with your local paths
+    const sampleImages = [
+        './1.jfif',
+        './2.jfif',
+        './3.jfif',
+        './4.jfif',
+        './5.jfif',
+        './6.jfif',
+        './7.jfif',
+        './8.jfif',
+        './9.jfif',
+        './10.jfif',
+        './11.jfif',
+        './12.jpg',
+    ];
+
+    // Load random image on mount
+    useEffect(() => {
+        loadRandomImage();
+    }, []);
+
+    const loadRandomImage = () => {
+        setLoadError(false);
+        const randomUrl = sampleImages[Math.floor(Math.random() * sampleImages.length)];
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = () => {
+            setImage(img);
+            setImageLoaded(true);
+        };
+
+        img.onerror = () => {
+            console.error('Failed to load image:', randomUrl);
+            setLoadError(true);
+            // Try loading another image
+            setTimeout(loadRandomImage, 2000);
+        };
+
+        img.src = randomUrl;
+    };
+
+    const handleNewPainting = () => {
+        reset();
+        loadRandomImage();
+    };
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
@@ -50,18 +98,24 @@ export default function PaintingAnimator() {
         let width = img.width;
         let height = img.height;
 
-        if (width > MAX_SIZE || height > MAX_SIZE) {
-            if (width > height) {
-                height = (height / width) * MAX_SIZE;
-                width = MAX_SIZE;
-            } else {
-                width = (width / height) * MAX_SIZE;
-                height = MAX_SIZE;
-            }
-        }
+        // if (width > MAX_SIZE || height > MAX_SIZE) {
+        //     if (width > height) {
+        //         height = (height / width) * MAX_SIZE;
+        //         width = MAX_SIZE;
+        //     } else {
+        //         width = (width / height) * MAX_SIZE;
+        //         height = MAX_SIZE;
+        //     }
+        // }
 
         const canvas = canvasRef.current;
         const colorCanvas = colorCanvasRef.current;
+
+        if (!canvas || !colorCanvas) {
+            console.error('Canvas refs not available');
+            setIsProcessing(false);
+            return;
+        }
 
         canvas.width = colorCanvas.width = width;
         canvas.height = colorCanvas.height = height;
@@ -69,6 +123,7 @@ export default function PaintingAnimator() {
         const ctx = canvas.getContext('2d');
         const colorCtx = colorCanvas.getContext('2d');
 
+        // Draw the image to color canvas
         colorCtx.drawImage(img, 0, 0, width, height);
 
         // Get image data for edge detection
@@ -79,10 +134,16 @@ export default function PaintingAnimator() {
         // Generate optimized paths
         pathDataRef.current = generateOptimizedPaths(edges, width, height);
 
+        // Clear main canvas with white
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
 
         setIsProcessing(false);
+
+        // Auto-start animation
+        setTimeout(() => {
+            startAnimation();
+        }, 100);
     };
 
     const toGrayscale = (imageData) => {
@@ -131,7 +192,7 @@ export default function PaintingAnimator() {
             }
         }
 
-        // Collect fill points (sample every 3 pixels)
+        // Collect fill points (sample every 2 pixels for better coverage)
         for (let y = 0; y < height; y += 1) {
             for (let x = 0; x < width; x += 1) {
                 fillPoints.push({ x, y });
@@ -164,7 +225,7 @@ export default function PaintingAnimator() {
         setPhase('');
         currentIndexRef.current = 0;
 
-        if (canvasRef.current) {
+        if (canvasRef.current && pathDataRef.current) {
             const ctx = canvasRef.current.getContext('2d');
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -199,7 +260,7 @@ export default function PaintingAnimator() {
             ctx.fill();
 
             currentIndexRef.current = endIdx;
-            setProgress(Math.floor((endIdx / points.length) * 50));
+            setProgress(Math.floor((endIdx / points.length) * 40));
 
             if (endIdx >= points.length) {
                 setPhase('coloring');
@@ -221,7 +282,7 @@ export default function PaintingAnimator() {
             }
 
             currentIndexRef.current = endIdx;
-            setProgress(51 + Math.floor((endIdx / points.length) * 49));
+            setProgress(41 + Math.floor((endIdx / points.length) * 59));
 
             if (endIdx >= points.length) {
                 setIsAnimating(false);
@@ -246,106 +307,98 @@ export default function PaintingAnimator() {
     }, [isAnimating, isPaused, phase, speed]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
-            <div className="max-w-6xl mx-auto">
-                <h1 className="text-4xl font-bold text-gray-800 mb-2 text-center">
-                    Painting Animator
-                </h1>
-                <p className="text-gray-600 mb-8 text-center">
-                    Upload an image and watch it being drawn stroke by stroke
-                </p>
+        <div className='flex flex-col justify-center items-center text-center overflow-clip'>
+            <div>
+                <button
+                    onClick={handleNewPainting}
+                    disabled={isProcessing}
+                >
+                    <span>🖌 New Painting</span>
+                </button>
 
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <div className="flex flex-wrap items-center gap-4 mb-4">
-                        <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition">
-                            <Upload size={20} />
-                            <span>Upload Image</span>
+                <button className='w-1/3'>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                    />
+                </button>
+
+                {image && !isProcessing && (
+                    <>
+                        {isAnimating ? (
+                            <button
+                                onClick={togglePause}
+                            >
+                                {isPaused ? "▶︎ " : "⏸"}
+                                <span>{isPaused ? 'Resume' : 'Pause'}</span>
+                            </button>
+                        ) : phase === 'complete' ? (
+                            <button
+                                onClick={reset}
+                            >
+                                <span>↻ Restart</span>
+                            </button>
+                        ) : null}
+
+                        <button
+                            onClick={reset}
+                        >
+                            <span>🗘 Reset</span>
+                        </button>
+
+                        <div>
+                            <span>Speed:</span>
                             <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="hidden"
+                                type="range"
+                                min="10"
+                                max="500"
+                                value={speed}
+                                onChange={(e) => setSpeed(Number(e.target.value))}
                             />
-                        </label>
+                            <span>{speed}x</span>
+                        </div>
+                    </>
+                )}
+            </div>
 
-                        {image && !isProcessing && (
-                            <>
-                                <button
-                                    onClick={isAnimating ? togglePause : startAnimation}
-                                    disabled={isAnimating && phase === 'complete'}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
-                                >
-                                    {isAnimating && !isPaused ? <Pause size={20} /> : <Play size={20} />}
-                                    <span>{isAnimating && !isPaused ? 'Pause' : 'Start'}</span>
-                                </button>
-
-                                <button
-                                    onClick={reset}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-                                >
-                                    <RotateCcw size={20} />
-                                    <span>Reset</span>
-                                </button>
-
-                                <div className="flex items-center gap-3 ml-auto">
-                                    <span className="text-sm text-gray-600 font-medium">Speed:</span>
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="500"
-                                        value={speed}
-                                        onChange={(e) => setSpeed(Number(e.target.value))}
-                                        className="w-32"
-                                    />
-                                    <span className="text-sm text-gray-600 font-medium w-12">{speed}x</span>
-                                </div>
-                            </>
-                        )}
+            {isAnimating && (
+                <div>
+                    <div>
+                        <span>
+                            {phase === 'outline' ? 'Drawing Outlines...' :
+                                phase === 'coloring' ? 'Adding Colors...' : 'Complete!'}
+                        </span>
+                        <span>{progress}%</span>
                     </div>
+                    <div>
+                        <div
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+            )}
 
-                    {isAnimating && (
-                        <div className="mb-4">
-                            <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                <span className="font-medium">
-                                    {phase === 'outline' ? 'Drawing Outlines...' :
-                                        phase === 'coloring' ? 'Adding Colors...' :
-                                            phase === 'smoothing' ? 'Smoothing Outlines...' :
-                                                'Complete!'}
-                                </span>
-                                <span>{progress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
+            <div>
+                <div>
+                    {isProcessing ? (
+                        <div>
+                            <div></div>
+                            <p>Processing image...</p>
+                        </div>
+                    ) : !image ? (
+                        <div>
+                            ⬆
+                            <p>Loading...</p>
+                        </div>
+                    ) : (
+                        <div className='max-w-full h-auto'>
+                            <canvas
+                                ref={canvasRef}
+                            />
+                            <canvas ref={colorCanvasRef} style={{ display: 'none' }} />
                         </div>
                     )}
-
-                    {isProcessing && (
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                            <p className="text-gray-600">Processing image...</p>
-                        </div>
-                    )}
-
-                    <div className="flex justify-center items-center bg-gray-50 rounded-lg p-4 min-h-[400px]">
-                        {!image ? (
-                            <div className="text-center text-gray-400">
-                                <Upload size={48} className="mx-auto mb-2 opacity-50" />
-                                <p>Upload an image to begin</p>
-                            </div>
-                        ) : (
-                            <div>
-                                <canvas
-                                    ref={canvasRef}
-                                    className="max-w-full h-auto border border-gray-300 rounded shadow-lg"
-                                />
-                                <canvas ref={colorCanvasRef} style={{ display: 'none' }} />
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
         </div>
