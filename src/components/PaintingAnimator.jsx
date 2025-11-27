@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Play, Pause, RotateCcw } from 'lucide-react';
 
 export default function PaintingAnimator() {
     const [image, setImage] = useState(null);
@@ -18,7 +17,7 @@ export default function PaintingAnimator() {
     const pathDataRef = useRef(null);
     const currentIndexRef = useRef(0);
 
-    // const MAX_SIZE = 1000;
+    const MAX_SIZE = 1000;
 
     // Use online images or replace with your local paths
     const sampleImages = [
@@ -34,6 +33,7 @@ export default function PaintingAnimator() {
         './10.jfif',
         './11.jfif',
         './12.jpg',
+        './img.jpg'
     ];
 
     // Load random image on mount
@@ -98,15 +98,15 @@ export default function PaintingAnimator() {
         let width = img.width;
         let height = img.height;
 
-        // if (width > MAX_SIZE || height > MAX_SIZE) {
-        //     if (width > height) {
-        //         height = (height / width) * MAX_SIZE;
-        //         width = MAX_SIZE;
-        //     } else {
-        //         width = (width / height) * MAX_SIZE;
-        //         height = MAX_SIZE;
-        //     }
-        // }
+        if (width > MAX_SIZE || height > MAX_SIZE) {
+            if (width > height) {
+                height = (height / width) * MAX_SIZE;
+                width = MAX_SIZE;
+            } else {
+                width = (width / height) * MAX_SIZE;
+                height = MAX_SIZE;
+            }
+        }
 
         const canvas = canvasRef.current;
         const colorCanvas = colorCanvasRef.current;
@@ -308,7 +308,7 @@ export default function PaintingAnimator() {
 
     return (
         <div className='flex flex-col justify-center items-center text-center overflow-clip'>
-            <div>
+            <div className='flex flex-col'>
                 <button
                     onClick={handleNewPainting}
                     disabled={isProcessing}
@@ -316,7 +316,7 @@ export default function PaintingAnimator() {
                     <span>🖌 New Painting</span>
                 </button>
 
-                <button className='w-1/3'>
+                <button className='w-fit text-center'>
                     <input
                         type="file"
                         accept="image/*"
@@ -335,7 +335,7 @@ export default function PaintingAnimator() {
                             </button>
                         ) : phase === 'complete' ? (
                             <button
-                                onClick={reset}
+                                onClick={handleNewPainting}
                             >
                                 <span>↻ Restart</span>
                             </button>
@@ -392,7 +392,7 @@ export default function PaintingAnimator() {
                             <p>Loading...</p>
                         </div>
                     ) : (
-                        <div className='max-w-full h-auto'>
+                        <div className='h-auto'>
                             <canvas
                                 ref={canvasRef}
                             />
