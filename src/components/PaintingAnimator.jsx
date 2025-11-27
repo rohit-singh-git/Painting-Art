@@ -17,24 +17,10 @@ export default function PaintingAnimator() {
     const pathDataRef = useRef(null);
     const currentIndexRef = useRef(0);
 
-    const MAX_SIZE = 1000;
+    // const MAX_SIZE = 1000;
 
     // Use online images or replace with your local paths
-    const sampleImages = [
-        './1.jfif',
-        './2.jfif',
-        './3.jfif',
-        './4.jfif',
-        './5.jfif',
-        './6.jfif',
-        './7.jfif',
-        './8.jfif',
-        './9.jfif',
-        './10.jfif',
-        './11.jfif',
-        './12.jpg',
-        './img.jpg'
-    ];
+    const sampleImages = ['0.webp', '1.webp', '11.webp', '12.jpg', '12.webp', '13.jpg', '14.png', '15.jpg', '16.jpg', '17.jpg', '18.jpg', '19.png', '2.webp', '20.jpg', '21.jpg', '22.png', '23.jpg', '24.png', '25.jpg', '26.png', '27.jpg', '28.jpg', '29.jpg', '3.webp', '30.webp', '31.jpg', '32.jpg', '33.jpg', '34.jpg', '35.jpg', '36.png', '4.webp', '5.jfif', '5.webp', '6.jfif', '6.webp', '7.jfif', '7.webp', '8.jfif', '8.webp', '9.jfif', '9.webp', '54564.jpg'];
 
     // Load random image on mount
     useEffect(() => {
@@ -98,15 +84,15 @@ export default function PaintingAnimator() {
         let width = img.width;
         let height = img.height;
 
-        if (width > MAX_SIZE || height > MAX_SIZE) {
-            if (width > height) {
-                height = (height / width) * MAX_SIZE;
-                width = MAX_SIZE;
-            } else {
-                width = (width / height) * MAX_SIZE;
-                height = MAX_SIZE;
-            }
-        }
+        // if (width > MAX_SIZE || height > MAX_SIZE) {
+        //     if (width > height) {
+        //         height = (height / width) * MAX_SIZE;
+        //         width = MAX_SIZE;
+        //     } else {
+        //         width = (width / height) * MAX_SIZE;
+        //         height = MAX_SIZE;
+        //     }
+        // }
 
         const canvas = canvasRef.current;
         const colorCanvas = colorCanvasRef.current;
@@ -193,8 +179,8 @@ export default function PaintingAnimator() {
         }
 
         // Collect fill points (sample every 2 pixels for better coverage)
-        for (let y = 0; y < height; y += 1) {
-            for (let x = 0; x < width; x += 1) {
+        for (let y = 0; y < height; y += 0.5) {
+            for (let x = 0; x < width; x += 0.5) {
                 fillPoints.push({ x, y });
             }
         }
