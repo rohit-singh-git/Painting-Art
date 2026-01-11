@@ -48,6 +48,13 @@ export default function PaintingAnimator() {
         img.src = randomUrl;
     };
 
+    const downloadCanvas = (canvas, filename = "Painting.jpg") => {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL("image/jpg");
+        link.click();
+    }
+
     const handleNewPainting = () => {
         reset();
         loadRandomImage();
@@ -298,11 +305,12 @@ export default function PaintingAnimator() {
                 <button
                     onClick={handleNewPainting}
                     disabled={isProcessing}
+                    className='transition'
                 >
                     <span>🖌 New Painting</span>
                 </button>
 
-                <button className='w-fit text-center'>
+                <button className='w-fit text-center transition'>
                     <input
                         type="file"
                         accept="image/*"
@@ -322,6 +330,7 @@ export default function PaintingAnimator() {
                         ) : phase === 'complete' ? (
                             <button
                                 onClick={handleNewPainting}
+                                className='transition'
                             >
                                 <span>↻ Restart</span>
                             </button>
@@ -329,11 +338,12 @@ export default function PaintingAnimator() {
 
                         <button
                             onClick={reset}
+                            className='transition'
                         >
                             <span>🗘 Reset</span>
                         </button>
 
-                        <div>
+                        <div className='mt-3'>
                             <span>Speed:</span>
                             <input
                                 type="range"
@@ -378,12 +388,17 @@ export default function PaintingAnimator() {
                             <p>Loading...</p>
                         </div>
                     ) : (
-                        <div className='h-auto'>
-                            <canvas
-                                ref={canvasRef}
-                            />
-                            <canvas ref={colorCanvasRef} style={{ display: 'none' }} />
-                        </div>
+                        <>
+                            <div className='h-auto m-3'>
+                                <canvas
+                                    ref={canvasRef}
+                                />
+                                <canvas ref={colorCanvasRef} style={{ display: 'none' }} />
+                            </div>
+                            {phase === "complete" && (
+                                <button className='font-semibold transition' onClick={() => downloadCanvas(canvasRef.current)}>Download Painting</button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
